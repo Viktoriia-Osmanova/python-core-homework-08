@@ -25,7 +25,7 @@ def get_birthdays_per_week(users):
             next_monday = next_week + timedelta(days=1)  # Наступний понеділок
             if "Monday" not in birthdays_per_week:
                 birthdays_per_week["Monday"] = []
-            birthdays_per_week["Monday"].extend(birthdays_per_week.pop(day))
+            birthdays_per_week["Monday"].insert(0, *birthdays_per_week.pop(day))
             print(next_monday)
 
     return birthdays_per_week
