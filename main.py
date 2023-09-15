@@ -1,49 +1,80 @@
-from datetime import date, timedelta
+contacts = {}
 
-def get_birthdays_per_week(users):
-    today = date.today()
-    current_weekday = today.weekday()  # День тижня, де 0 - понеділок, 6 - неділя
-    next_week = today + timedelta(days=(7 - current_weekday))  # Початок наступного тижня
+def input_error(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except KeyError:
+            return "Enter user name"
+        except ValueError:
+            return "Give me name and phone please"
+        except IndexError:
+            return "Invalid command format"
+    return wrapper
 
-    birthdays_per_week = {}  # Словник для зберігання днів народження
+@input_error
+def add_contact(name, phone):
+    contacts[name] = phone
+    return f"Added {name} with phone {phone}"
 
-    for user in users:
-        birthday = user["birthday"]
-        if birthday < today:  # Якщо день народження вже минув у цьому році, враховуємо його наступного року
-            birthday = birthday.replace(year=today.year + 1)
+@input_error
+def change_phone(name, new_phone):
+    if name in contacts:
+        contacts[name] = new_phone
+        return f"Changed phone for {name} to {new_phone}"
+    else:
+        raise KeyError
 
-        days_until_birthday = (birthday - today).days
-        if 0 <= days_until_birthday <= 6:  # День народження у цьому тижні
-            day_of_week = (today + timedelta(days=days_until_birthday)).strftime('%A')
-            if day_of_week not in birthdays_per_week:
-                birthdays_per_week[day_of_week] = []
-            birthdays_per_week[day_of_week].append(user["name"])
+@input_error
+def get_phone(name):
+    if name in contacts:
+        return f"{name}'s phone number is {contacts[name]}"
+    else:
+        raise KeyError
 
-    # Переносимо дні народження з вихідними на наступний робочий день (понеділок)
-    for day in ["Saturday", "Sunday"]:
-        if day in birthdays_per_week:
-            next_monday = next_week + timedelta(days=1)  # Наступний понеділок
-            if "Monday" not in birthdays_per_week:
-                birthdays_per_week["Monday"] = []
-            birthdays_per_week["Monday"].insert(0, *birthdays_per_week.pop(day))
-            print(next_monday)
+@input_error
+def show_all_contacts():
+    if not contacts:
+        return "No contacts found"
+    else:
+        result = "Contacts:\n"
+        for name, phone in contacts.items():
+            result += f"{name}: {phone}\n"
+        return result.strip()
 
-    return birthdays_per_week
+def main():
+    print("How can I help you?")
+    
+    while True:
+        command = input().strip().lower()
+        
+        if command in ["good bye", "close", "exit"]:
+            print("Good bye!")
+            break
+        elif command == "hello":
+            print("How can I help you?")
+        elif command.startswith("add"):
+            try:
+                _, name, phone = command.split()
+                print(add_contact(name, phone))
+            except ValueError:
+                print("Invalid command format. Usage: add [name] [phone]")
+        elif command.startswith("change"):
+            try:
+                _, name, new_phone = command.split()
+                print(change_phone(name, new_phone))
+            except ValueError:
+                print("Invalid command format. Usage: change [name] [new_phone]")
+        elif command.startswith("phone"):
+            try:
+                _, name = command.split()
+                print(get_phone(name))
+            except ValueError:
+                print("Invalid command format. Usage: phone [name]")
+        elif command == "show all":
+            print(show_all_contacts())
+        else:
+            print("Invalid command. Type 'hello' to see available commands.")
 
-# Приклад використання функції
 if __name__ == "__main__":
-    today = date.today()
-    users = [
-        {
-            "name": "John",
-            "birthday": (today + timedelta(days=5)),
-        },
-        {
-            "name": "Doe",
-            "birthday": (today + timedelta(days=6)),
-        },
-        {"name": "Alice", "birthday": (today + timedelta(days=3))},
-    ]
-
-    birthdays = get_birthdays_per_week(users)
-    print(birthdays)
+    main()
